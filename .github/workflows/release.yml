@@ -58,9 +58,9 @@ jobs:
         run: | 
           pwd
           ls -l
-          cargo build --release
+          sbt nativeCompile 
 
-        working-directory: ./native
+#        working-directory: ./native
 #      - name: Build release musl library
 #        run: |
 #          rustup target add x86_64-unknown-linux-musl
