@@ -100,9 +100,9 @@ jobs:
     name: Build release library on MacOS
     runs-on: macos-latest
     needs: [ version ]
-    defaults:
-      run:
-        working-directory: ./native
+#    defaults:
+#      run:
+#        working-directory: ./native
     steps:
       - uses: actions/checkout@v3
 
