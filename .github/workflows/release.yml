@@ -110,8 +110,8 @@ jobs:
           rustup target add aarch64-apple-darwin
           SDKROOT=$(xcrun -sdk macosx11.0 --show-sdk-path) \
             MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.0 --show-sdk-platform-version) \
-#          set CARGO_BUILD_TARGET="aarch64-apple-darwin"
           RUSTFLAGS="--target=aarch64-apple-darwin" sbt nativeCompile
+#          set CARGO_BUILD_TARGET="aarch64-apple-darwin"
 #      - name: Rename static lib
 #        run: mv target/release/libpolar.a target/libpolar-macOS.a
 #      - name: Rename static ARM lib
