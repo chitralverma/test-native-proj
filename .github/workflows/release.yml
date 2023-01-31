@@ -65,9 +65,9 @@ jobs:
 #        run: mv target/release/libpolar.a target/libpolar-${{runner.os}}.a
 #      - name: Rename static lib
 #        run: mv target/x86_64-unknown-linux-musl/release/libpolar.a target/libpolar-musl.a
-#      - uses: actions/upload-artifact@v2
+#      - uses: actions/upload-artifact@v3
 #        with:
-#          name: oso_library
+#          name: my_library
 #          path: target/release/libpolar.so
 #      - uses: actions/upload-artifact@v2
 #        with:
@@ -85,11 +85,18 @@ jobs:
 #          path: polar-c-api/polar.h
 #
   macos_libs:
-    name: Build release libraries on MacOS
-    runs-on: macos-latest
+    name: Build release library on MacOS
+    runs-on: macos-11
     needs: [ version ]
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Rust stable toolchain
         uses: actions-rs/toolchain@v1
         with:
@@ -98,13 +105,13 @@ jobs:
           override: true
       - name: Build release library
         run: sbt nativeCompile
-      - name: Build release arm library
+      - name: Build release library on MacOS arm
         run: |
           rustup target add aarch64-apple-darwin
           SDKROOT=$(xcrun -sdk macosx11.0 --show-sdk-path) \
             MACOSX_DEPLOYMENT_TARGET=$(xcrun -sdk macosx11.0 --show-sdk-platform-version) \
-          set CARGO_BUILD_TARGET="aarch64-apple-darwin"
-          sbt nativeCompile
+#          set CARGO_BUILD_TARGET="aarch64-apple-darwin"
+          RUSTFLAGS="--target=aarch64-apple-darwin" sbt nativeCompile
 #      - name: Rename static lib
 #        run: mv target/release/libpolar.a target/libpolar-macOS.a
 #      - name: Rename static ARM lib
