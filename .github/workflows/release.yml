@@ -28,38 +28,39 @@ jobs:
       - name: Show Version
         run: echo $(sbt -no-colors 'print version' | tail -n 1)
 
-      - name: Output Version
-        run: echo "${{ steps.version.outputs.snapshot }} :rocket:" >> $GITHUB_STEP_SUMMARY
-      - name: Set version env
+      - name: Set Version in ENV
         run:
           echo "PROJECT_VERSION=${{ steps.version.outputs.snapshot }}" >> $GITHUB_ENV
-#          ls -l
-#          echo $(sbt -no-colors 'print version' | tail -n 1)
-#          echo "PROJECT_VERSION=$( sbt --error --no-colors ';project core; print  version')" >> $GITHUB_ENV
-#          echo PROJECT_VERSION = $PROJECT_VERSION
-        
 
-#  linux_libs:
-#    name: Build release libraries on Linux
-#    runs-on: ubuntu-latest
-#    needs: [ version ]
-#    steps:
-#      - uses: actions/checkout@v2
-#      - uses: actions/cache@v2
-#        with:
-#          path: |
-#            ~/.cargo/registry
-#            ~/.cargo/git
-#            target
-#          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
-#      - name: Install Rust stable toolchain
-#        uses: actions-rs/toolchain@v1
-#        with:
-#          profile: minimal
-#          toolchain: stable
-#          override: true
-#      - name: Build release libraries
-#        run: cargo build --release
+      - name: Add Version to summary
+        run: echo "${{ steps.version.outputs.snapshot }}" >> $GITHUB_STEP_SUMMARY
+
+  linux_libs:
+    name: Build release libraries on Linux
+    runs-on: ubuntu-latest
+    needs: [ version ]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
+      - name: Install Rust stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Build release libraries
+        run: | 
+          pwd
+          ls -l
+          cargo build --release
+
+        working-directory: ./native
 #      - name: Build release musl library
 #        run: |
 #          rustup target add x86_64-unknown-linux-musl
