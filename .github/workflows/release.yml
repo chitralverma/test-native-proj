@@ -23,7 +23,7 @@ jobs:
           cache: 'sbt'
       - name: Set version env
         run: |
-          echo "PROJECT_VERSION=$(sbt -Dsbt.supershell=false -error "; project core ; print  version" )" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$(sbt -Dsbt.supershell=false -error '; project core ; print  version' )" >> $GITHUB_ENV
           echo PROJECT_VERSION = $PROJECT_VERSION
         
 
