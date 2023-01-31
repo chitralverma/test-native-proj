@@ -56,18 +56,19 @@ jobs:
         with:
           path: |
             ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target
+            **/target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-      - name: Install Rust stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+
+#      - name: Install Rust stable toolchain
+#        uses: actions-rs/toolchain@v1
+#        with:
+#          profile: minimal
+#          toolchain: stable
+#          override: true
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Build release libraries
         run: sbt nativeCompile
 
