@@ -24,7 +24,7 @@ jobs:
       - name: Set version env
         run: |
           ls -l 
-          echo "PROJECT_VERSION=$(sbt -Dsbt.supershell=false -error '; project core ; print  version' )" >> $GITHUB_ENV
+          echo "PROJECT_VERSION=$( sbt --error --no-colors ';project core; print  version')" >> $GITHUB_ENV
           echo PROJECT_VERSION = $PROJECT_VERSION
         
 
