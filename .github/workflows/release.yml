@@ -6,8 +6,8 @@ on:
     branches:
       - main
 
-#permissions:
-#  contents: read
+permissions:
+  contents: read
 
 jobs:
   version:
@@ -46,7 +46,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            ./native/target
           key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Rust stable toolchain
         uses: actions-rs/toolchain@v1
@@ -95,7 +95,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
+            ./native/target
           key: ${{ runner.os }}-cargo-release-${{ hashFiles('**/Cargo.lock') }}
       - name: Install Rust stable toolchain
         uses: actions-rs/toolchain@v1
