@@ -6,8 +6,8 @@ on:
     branches:
       - main
 
-permissions:
-  contents: read
+#permissions:
+#  contents: read
 
 jobs:
   version:
@@ -21,11 +21,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'sbt'
+      - name: Get Version
+        id: version
+        run: echo ::set-output name=snapshot::$(sbt -no-colors 'print version' | tail -n 1)
+
+      - name: Show Version
+        run: echo $(sbt -no-colors 'print version' | tail -n 1)
+
+      - name: Output Version
+        run: echo "${{ steps.version.outputs.snapshot }} :rocket:" >> $GITHUB_STEP_SUMMARY
       - name: Set version env
-        run: |
-          ls -l 
-          echo "PROJECT_VERSION=$( sbt --error --no-colors ';project core; print  version')" >> $GITHUB_ENV
-          echo PROJECT_VERSION = $PROJECT_VERSION
+        run:
+          echo "PROJECT_VERSION=${{ steps.version.outputs.snapshot }}" >> $GITHUB_ENV
+#          ls -l
+#          echo $(sbt -no-colors 'print version' | tail -n 1)
+#          echo "PROJECT_VERSION=$( sbt --error --no-colors ';project core; print  version')" >> $GITHUB_ENV
+#          echo PROJECT_VERSION = $PROJECT_VERSION
         
 
 #  linux_libs:
