@@ -70,16 +70,18 @@ jobs:
           path: |
             ~/.cargo/
             ./native/target/
-          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
+          key: "${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
+          restore-keys: "${{ runner.arch }}-${{ runner.os }}-cargo-"
 #
 #      - name: Set platform
-#        run: |
-#          rustup target add ${{ matrix.arch }}
-#          echo "CARGO_BUILD_TARGET="${{ matrix.arch }} >> $GITHUB_ENV
-
       - name: Build release library
-        run: sbt nativeCompile
+        run: |
+          rustup target add ${{ matrix.arch }}
+          echo "CARGO_BUILD_TARGET=${{ matrix.arch }}" >> $GITHUB_ENV
+          sbt nativeCompile
+
+#        run: rustup target add ${{ matrix.arch }}
+#        run:
 
 
   #      - name: Build release musl library
