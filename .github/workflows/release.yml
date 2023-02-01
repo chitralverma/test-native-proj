@@ -49,8 +49,8 @@ jobs:
           - os: macos-latest
             arch: x86_64-apple-darwin
 
-#          - os: macos-latest
-#            arch: aarch64-apple-darwin
+          - os: macos-latest
+            arch: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
 
@@ -70,8 +70,8 @@ jobs:
           path: |
             ~/.cargo/
             ./native/target/
-          key: "${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}"
-          restore-keys: "${{ runner.arch }}-${{ runner.os }}-cargo-"
+          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
 #
 #      - name: Set platform
       - name: Build release library
