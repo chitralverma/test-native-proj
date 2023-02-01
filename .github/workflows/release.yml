@@ -61,16 +61,17 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
 
-      - uses: dtolnay/rust-toolchain@stable
+      - name: Install rust toolchain
+        uses: dtolnay/rust-toolchain@stable
 
-      - uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/
-            ./native/target/
-          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
+#      - uses: actions/cache@v3
+#        continue-on-error: false
+#        with:
+#          path: |
+#            ~/.cargo/
+#            ./native/target/
+#          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+#          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
 
       - name: Set Platform
         run: |
