@@ -35,13 +35,22 @@ jobs:
       - name: Add Version to summary
         run: echo "${{ steps.version.outputs.snapshot }}" >> $GITHUB_STEP_SUMMARY
 
-  linux_libs:
-    name: Build native lib for Linux
-    runs-on: ubuntu-latest
+  build-natives:
+    name: Build native lib for ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
     needs: [ version ]
-    #    defaults:
-    #      run:
-    #        working-directory: ./native
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: x86_64-unknown-linux-gnu
+
+          - os: macos-latest
+            arch: x86_64-apple-darwin
+
+          - os: macos-latest
+            arch: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
 
@@ -52,19 +61,25 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
 
+      - uses: dtolnay/rust-toolchain@stable
+
       - uses: actions/cache@v3
         continue-on-error: false
         with:
           path: |
-            ~/.cargo/bin/
-            **/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            ~/.cargo/
+            ./native/target/
+          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
 
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set Platform
+        run: |
+          rustup target add ${{ matrix.arch }}
+          echo "CARGO_BUILD_TARGET=${{ matrix.arch }}" >> $GITHUB_ENV
 
       - name: Build release library
         run: sbt nativeCompile
+
 
   #      - name: Build release musl library
   #        run: |
@@ -94,111 +109,6 @@ jobs:
   #          path: polar-c-api/polar.h
   #
 
-  macos_x86_64:
-    name: Build release library on Mac Intel
-    runs-on: macos-latest
-    needs: [ version ]
-#    defaults:
-#      run:
-#        working-directory: ./native
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'sbt'
-
-      - uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            **/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Build release library
-        run: sbt nativeCompile
-
-  macos_aarch64:
-    name: Build release library on Mac Silicon
-    runs-on: macos-latest
-    needs: [ version ]
-    #    defaults:
-    #      run:
-    #        working-directory: ./native
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'sbt'
-
-      - uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/bin/
-            **/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Set up Rust targets
-        run: |
-          rustup target add aarch64-apple-darwin
-          echo "CARGO_BUILD_TARGET=aarch64-apple-darwin" >> $GITHUB_ENV
-
-      - name: Build release library
-        run: sbt nativeCompile
-#      - name: Build release library on MacOS arm
-#        run: |
-#          rustup target add aarch64-apple-darwin
-#          RUSTFLAGS="--target=aarch64-apple-darwin" sbt nativeCompile
-  
-
-  #          set CARGO_BUILD_TARGET="aarch64-apple-darwin"
-  #      - name: Rename static lib
-  #        run: mv target/release/libpolar.a target/libpolar-macOS.a
-  #      - name: Rename static ARM lib
-  #        run: mv target/aarch64-apple-darwin/release/libpolar.a target/libpolar-macOS-arm.a
-  #      - name: Rename dynamic lib
-  #        run: mv target/release/libpolar.dylib target/libpolar-macOS.dylib
-  #      - name: Rename dynamic ARM lib
-  #        run: mv target/aarch64-apple-darwin/release/libpolar.dylib target/libpolar-macOS-arm.dylib
-  #      - name: Merge dynamic libs into fat dynamic lib
-  #        run: lipo -create target/libpolar-macOS.dylib target/libpolar-macOS-arm.dylib -output target/libpolar-macOS-fat.dylib
-  #      - name: Merge static libs into fat static lib
-  #        run: lipo -create target/libpolar-macOS.a target/libpolar-macOS-arm.a -output target/libpolar-macOS-fat.a
-  #      - uses: actions/upload-artifact@v2
-  #        with:
-  #          name: oso_library
-  #          path: |
-  #            target/libpolar-macOS-fat.dylib
-  #            target/libpolar-macOS.dylib
-  #            target/libpolar-macOS-arm.dylib
-  #      - uses: actions/upload-artifact@v2
-  #        with:
-  #          name: oso_static_library
-  #          if-no-files-found: error
-  #          path: |
-  #            target/libpolar-macOS-fat.a
-  #            target/libpolar-macOS.a
-  #            target/libpolar-macOS-arm.a
-  #      - uses: actions/upload-artifact@v2
-  #        with:
-  #          name: oso_static_library
-  #          path: polar-c-api/polar.h
-  #          if-no-files-found: error
   #
   #  windows_libs:
   #    name: Build release libraries on Windows
