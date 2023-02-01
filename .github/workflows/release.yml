@@ -49,8 +49,8 @@ jobs:
           - os: macos-latest
             arch: x86_64-apple-darwin
 
-          - os: macos-latest
-            arch: aarch64-apple-darwin
+#          - os: macos-latest
+#            arch: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@v3
 
@@ -64,19 +64,19 @@ jobs:
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-#      - uses: actions/cache@v3
-#        continue-on-error: false
-#        with:
-#          path: |
-#            ~/.cargo/
-#            ./native/target/
-#          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-#          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
-
-      - name: Set Platform
-        run: |
-          rustup target add ${{ matrix.arch }}
-          echo "CARGO_BUILD_TARGET=${{ matrix.arch }}" >> $GITHUB_ENV
+      - uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/
+            ./native/target/
+          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
+#
+#      - name: Set platform
+#        run: |
+#          rustup target add ${{ matrix.arch }}
+#          echo "CARGO_BUILD_TARGET="${{ matrix.arch }} >> $GITHUB_ENV
 
       - name: Build release library
         run: sbt nativeCompile
