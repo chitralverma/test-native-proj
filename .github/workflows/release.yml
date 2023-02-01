@@ -158,7 +158,9 @@ jobs:
 
       - name: Build release library
         run: |
-          cd ./native && cargo build --release --target=aarch64-apple-darwin
+          cd ./native
+          echo "CARGO_BUILD_TARGET=aarch64-apple-darwin" >> $GITHUB_ENV
+          sbt nativeCompile
 #      - name: Build release library on MacOS arm
 #        run: |
 #          rustup target add aarch64-apple-darwin
