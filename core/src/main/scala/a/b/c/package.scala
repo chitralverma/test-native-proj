@@ -4,8 +4,6 @@ import java.util.concurrent.atomic.AtomicReference
 
 import scala.util.{Failure, Success, Try}
 
-import com.github.sbt.jni.syntax.NativeLoader
-
 package object c {
 
   object LibraryStates extends Enumeration {
