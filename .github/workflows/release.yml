@@ -100,10 +100,9 @@ jobs:
         with:
           name: native_libs
           path: | 
-            target/${{ matrix.arch }}/${{ matrix.arch }}/release/*.so
-            target/${{ matrix.arch }}/${{ matrix.arch }}/release/*.dylib
-            target/${{ matrix.arch }}/${{ matrix.arch }}/release/*.dll
+            target/${{ matrix.arch }}/${{ matrix.arch }}/
           retention-days: 1
+          if-no-files-found: error
 
   publish:
     timeout-minutes: 15
