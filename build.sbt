@@ -1,5 +1,3 @@
-import scala.sys.process._
-
 /*
  ***********************
  * Constants *
@@ -79,14 +77,7 @@ lazy val native = project
   .settings(
     name := "native",
     crossPaths := false,
-    nativeCompile / sourceDirectory := baseDirectory.value,
-    nativePlatform := {
-      s"rustc -vV".!!
-        .split("\n")
-        .find(_.startsWith("host: "))
-        .map(_.split(" ")(1).trim)
-        .get
-    }
+    nativeCompile / sourceDirectory := baseDirectory.value
   )
   .enablePlugins(JniNative, JniPackage)
 
