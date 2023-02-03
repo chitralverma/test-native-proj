@@ -93,7 +93,7 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           cargo build --release --target ${{ matrix.arch }} --target-dir ./target/${{ matrix.arch }}
-          ll ./target/release/
+          ls -l ./target/release/
 #          echo "CARGO_BUILD_TARGET=${{ matrix.arch }}" >> $GITHUB_ENV
 #          sbt nativeCompile
 
