@@ -42,7 +42,7 @@ jobs:
       run:
         working-directory: ./native
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
           - os: ubuntu-latest
@@ -93,7 +93,7 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           cargo build --release --target ${{ matrix.arch }} --target-dir ./target/${{ matrix.arch }}
-          ls -l ./target/release/
+          ls -l ./target/${{ matrix.arch }}/
 #          echo "CARGO_BUILD_TARGET=${{ matrix.arch }}" >> $GITHUB_ENV
 #          sbt nativeCompile
 
@@ -101,7 +101,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: native_${{ matrix.arch }}
-          path: ./target/release/*.{so,dll,dylib}
+          path: ./target/${{ matrix.arch }}/release/*.{so,dll,dylib}
           retention-days: 1
 
   publish:
@@ -115,9 +115,9 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          path: /target/release/
+          path: ./target/${{ matrix.arch }}/release/
       - name: List the built artifacts
-        run: find .target/release
+        run: find ./target/${{ matrix.arch }}/release/
 
 
   #      - name: Build release musl library
