@@ -99,7 +99,8 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: native_libs
-          path: ~/native-libs
+          path: |
+            ~/native-libs/${{ matrix.arch }}/${{ matrix.arch }}/release
           retention-days: 1
           if-no-files-found: error
 
