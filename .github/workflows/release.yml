@@ -93,6 +93,7 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           cargo build --release --target ${{ matrix.arch }} --target-dir ./target/${{ matrix.arch }}
+          ls -R target/
 
       - name: Temporarily save native library for ${{ matrix.arch }}
         uses: actions/upload-artifact@v3
