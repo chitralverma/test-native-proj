@@ -93,9 +93,9 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           cargo build --release --target ${{ matrix.arch }} --target-dir ./target/${{ matrix.arch }}
-          ls -l ./target/${{ matrix.arch }}/
-#          echo "CARGO_BUILD_TARGET=${{ matrix.arch }}" >> $GITHUB_ENV
-#          sbt nativeCompile
+          ls -l target/${{ matrix.arch }}/${{ matrix.arch }}/release/
+          
+          find target/${{ matrix.arch }}/${{ matrix.arch }}/release/ -iname '*.dylib' -or -iname '*.so' -or -iname '*.dll'
 
       - name: Temporarily save native library for ${{ matrix.arch }}
         uses: actions/upload-artifact@v3
