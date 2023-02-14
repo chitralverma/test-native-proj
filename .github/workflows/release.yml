@@ -36,7 +36,7 @@ jobs:
         run: echo "${{ steps.version.outputs.snapshot }}" >> $GITHUB_STEP_SUMMARY
 
   build-natives:
-    name: ${{ matrix.arch }} native build
+    name: ${{ matrix.arch }} build
     runs-on: ${{ matrix.os }}
 #    defaults:
 #      run:
@@ -85,40 +85,43 @@ jobs:
         with:
           path: |
             ~/.cargo/
-            target/
-          key: ${{ runner.arch }}-${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+            **/target/
+            ~/.sbt
+            ~/.ivy2/cache
+            ~/.cache/coursier
+          key: ${{ runner.arch }}-${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
 
-      - name: Compile native library for ${{ matrix.arch }}
+      - name: Create Artifact with native library for ${{ matrix.arch }}
         run: |
           rustup target add ${{ matrix.arch }}
           sbt +publishLocal
-          ls -R ~/native-libs/${{ matrix.arch }}
+#          ls -R ~/native-libs/${{ matrix.arch }}
+#
+#      - name: Temporarily save native library for ${{ matrix.arch }}
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: native_libs
+#          path: |
+#            ~/native-libs/${{ matrix.arch }}/${{ matrix.arch }}/release
+#          retention-days: 1
+#          if-no-files-found: error
+#
+#  publish:
+#    timeout-minutes: 15
+#    runs-on: ubuntu-latest
+#    needs: [ build-natives, get-version ]
+#    steps:
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: native_libs
+#
+#      - name: List the built artifacts
+#        run: ls -R
+#        working-directory: ~/native-libs
 
-      - name: Temporarily save native library for ${{ matrix.arch }}
-        uses: actions/upload-artifact@v3
-        with:
-          name: native_libs
-          path: |
-            ~/native-libs/${{ matrix.arch }}/${{ matrix.arch }}/release
-          retention-days: 1
-          if-no-files-found: error
-
-  publish:
-    timeout-minutes: 15
-    runs-on: ubuntu-latest
-    needs: [ build-natives, get-version ]
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
-        with:
-          name: native_libs
-
-      - name: List the built artifacts
-        run: ls -R
-        working-directory: ~/native-libs
-
-
+############################
   #      - name: Build release musl library
   #        run: |
   #          rustup target add x86_64-unknown-linux-musl
