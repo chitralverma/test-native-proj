@@ -92,7 +92,7 @@ jobs:
       - name: Compile native library for ${{ matrix.arch }}
         run: |
           rustup target add ${{ matrix.arch }}
-          cargo build --release --target ${{ matrix.arch }} --target-dir ~/native-libs/${{ matrix.arch }}
+          sbt +publishLocal
           ls -R ~/native-libs/${{ matrix.arch }}
 
       - name: Temporarily save native library for ${{ matrix.arch }}
