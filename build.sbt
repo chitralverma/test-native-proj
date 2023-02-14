@@ -94,9 +94,6 @@ lazy val core = project
   .settings(javaTargetSettings: _*)
   .settings(name := "core")
   .settings(
-    libraryDependencies += "io.github.classgraph" % "classgraph" % "4.8.154"
-  )
-  .settings(
     inConfig(Compile)(settings),
     inConfig(Test)(settings)
   )

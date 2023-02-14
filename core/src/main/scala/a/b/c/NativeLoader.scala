@@ -1,6 +1,7 @@
 package a.b.c
 
 import java.nio.file.{Files, Path}
+
 import scala.collection.JavaConverters
 
 class NativeLoader(nativeLibrary: String) {
@@ -17,10 +18,6 @@ object NativeLoader {
 
       val resourcePath: String = "/native/" + lib
 
-      import io.github.classgraph.ClassGraph
-      import scala.jdk.CollectionConverters._
-      new ClassGraph().enableAllInfo.scan.getAllResources.asScala.map(_.getPath).foreach(println)
-
       val resourceStream = Option(
         this.getClass.getResourceAsStream(resourcePath)
       ) match {
@@ -33,9 +30,9 @@ object NativeLoader {
 
       val extractedPath = tmp.resolve(lib)
 
-      try {
+      try
         Files.copy(resourceStream, extractedPath)
-      } catch {
+      catch {
         case ex: Exception =>
           throw new UnsatisfiedLinkError(
             "Error while extracting native library: " + ex
@@ -45,9 +42,9 @@ object NativeLoader {
       System.load(extractedPath.toAbsolutePath.toString)
     }
 
-    def load(): Unit = try {
+    def load(): Unit = try
       System.loadLibrary(nativeLibrary)
-    } catch {
+    catch {
       case _: UnsatisfiedLinkError => loadPackaged()
     }
 
