@@ -39,7 +39,7 @@ jobs:
     name: ${{ matrix.arch }} build
     runs-on: ${{ matrix.os }}
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       TARGET_TRIPLE: ${{ matrix.arch }}
     #    defaults:
     #      run:
