@@ -38,6 +38,8 @@ jobs:
   build-natives:
     name: ${{ matrix.arch }} build
     runs-on: ${{ matrix.os }}
+    env:
+      TARGET_TRIPLE: ${{ matrix.arch }}
 #    defaults:
 #      run:
 #        working-directory: ./native

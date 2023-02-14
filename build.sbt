@@ -74,15 +74,17 @@ lazy val root = (project in file("."))
  * Core Module *
  ***********************
  */
+lazy val targetTriple = sys.env.getOrElse(
+  "TARGET_TRIPLE", {
+    println("Environment Variable TARGET_TRIPLE was not set, getting value from `rustc`.")
 
-def distinctBy[A, B](xs: List[A])(f: A => B): List[A] =
-  scala.reflect.internal.util.Collections.distinctBy(xs)(f)
-
-val targetTriple = s"rustc -vV".!!.split("\n")
-  .map(_.trim)
-  .find(_.startsWith("host"))
-  .map(_.split(" ")(1).trim)
-  .getOrElse(throw new IllegalStateException("No target triple found."))
+    s"rustc -vV".!!.split("\n")
+      .map(_.trim)
+      .find(_.startsWith("host"))
+      .map(_.split(" ")(1).trim)
+      .getOrElse(throw new IllegalStateException("No target triple found."))
+  }
+)
 
 val generateNativeLibrary = taskKey[Seq[(File, String)]](
   "Generates Native library using Cargo and adds it as managed resource to classpath."
