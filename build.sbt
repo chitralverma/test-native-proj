@@ -86,6 +86,18 @@ lazy val targetTriple = sys.env.getOrElse(
   }
 )
 
+lazy val targetClassifier = {
+  val tgt = targetTriple.toLowerCase(java.util.Locale.ROOT)
+  val arch = tgt.split("-").head
+
+  val host =
+    if (tgt.contains("linux")) "linux"
+    else if (tgt.contains("windows")) if (tgt.contains("msvc")) "win-msvc" else "win-gnu"
+    else if (tgt.contains("apple") || tgt.contains("darwin")) "darwin"
+
+  s"$host-$arch"
+}
+
 val generateNativeLibrary = taskKey[Seq[(File, String)]](
   "Generates Native library using Cargo and adds it as managed resource to classpath."
 )
@@ -102,7 +114,11 @@ lazy val core = project
   .settings(
     Compile / packageBin / artifact := {
       val prev: Artifact = (Compile / packageBin / artifact).value
-      prev.withClassifier(Some(targetTriple))
+      sLog.value.info(
+        s"Building jar with classifier `$targetClassifier`."
+      )
+
+      prev.withClassifier(Some(targetClassifier))
     }
   )
 
@@ -110,7 +126,7 @@ lazy val settings = Seq(
   generateNativeLibrary := Def
     .taskDyn[Seq[(File, String)]] {
       Def.task {
-        val logger = streams.value.log
+        val logger = sLog.value
 
         val processLogger = ProcessLogger(
           (o: String) => logger.info(o),
@@ -141,7 +157,9 @@ lazy val settings = Seq(
           .toMap
           .map { case (resourcePath, file) =>
             logger.info(
-              s"Adding resource from location $file to class path at location $resourcePath"
+              s"Adding resource from location $file " +
+                s"(size: ${file.length() / (1024 * 1024)} MBs) " +
+                s"to classpath at location $resourcePath"
             )
             (file, resourcePath)
           }

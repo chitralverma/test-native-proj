@@ -48,6 +48,10 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
+            arch: aarch64-unknown-linux-gnu
+            packages: ""
+
+          - os: ubuntu-latest
             arch: x86_64-unknown-linux-gnu
             packages: ""
 
