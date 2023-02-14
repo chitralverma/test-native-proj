@@ -119,9 +119,10 @@ lazy val settings = Seq(
         val cargoTomlPath = s"${baseDirectory.value}/../native/Cargo.toml"
 
         val buildCommand = s"""cargo build
+                              |-Z unstable-options
                               |--release
                               |--manifest-path $cargoTomlPath
-                              |-Z unstable-options
+                              |--target $targetTriple
                               |--out-dir $nativeOutputDir
                               |""".stripMargin
 
