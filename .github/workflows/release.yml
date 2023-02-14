@@ -38,9 +38,9 @@ jobs:
   build-natives:
     name: ${{ matrix.arch }} native build
     runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: ./native
+#    defaults:
+#      run:
+#        working-directory: ./native
     strategy:
       fail-fast: true
       matrix:
