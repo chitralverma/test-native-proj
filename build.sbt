@@ -82,7 +82,7 @@ val targetTriple = s"rustc -vV".!!.split("\n")
   .map(_.trim)
   .find(_.startsWith("host"))
   .map(_.split(" ")(1).trim)
-  .getOrElse(new IllegalStateException("No target triple found."))
+  .getOrElse(throw new IllegalStateException("No target triple found."))
 
 val generateNativeLibrary = taskKey[Seq[(File, String)]](
   "Generates Native library using Cargo and adds it as managed resource to classpath."
@@ -96,6 +96,12 @@ lazy val core = project
   .settings(
     inConfig(Compile)(settings),
     inConfig(Test)(settings)
+  )
+  .settings(
+    Compile / packageBin / artifact := {
+      val prev: Artifact = (Compile / packageBin / artifact).value
+      prev.withClassifier(Some(targetTriple))
+    }
   )
 
 lazy val settings = Seq(
