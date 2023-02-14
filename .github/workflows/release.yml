@@ -95,8 +95,8 @@ jobs:
             ~/.sbt
             ~/.ivy2/cache
             ~/.cache/coursier
-          key: ${{ runner.arch }}-${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
+          key: ${{ runner.arch }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.arch }}-
 
       - name: Create Artifact with native library for ${{ matrix.arch }}
         run: |

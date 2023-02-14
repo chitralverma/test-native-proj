@@ -74,6 +74,7 @@ lazy val root = (project in file("."))
  * Core Module *
  ***********************
  */
+
 lazy val targetTriple = sys.env.getOrElse(
   "TARGET_TRIPLE", {
     println("Environment Variable TARGET_TRIPLE was not set, getting value from `rustc`.")
@@ -85,18 +86,6 @@ lazy val targetTriple = sys.env.getOrElse(
       .getOrElse(throw new IllegalStateException("No target triple found."))
   }
 )
-
-lazy val targetClassifier = {
-  val tgt = targetTriple.toLowerCase(java.util.Locale.ROOT)
-  val arch = tgt.split("-").head
-
-  val host =
-    if (tgt.contains("linux")) "linux"
-    else if (tgt.contains("windows")) if (tgt.contains("msvc")) "win-msvc" else "win-gnu"
-    else if (tgt.contains("apple") || tgt.contains("darwin")) "darwin"
-
-  s"$host-$arch"
-}
 
 val generateNativeLibrary = taskKey[Seq[(File, String)]](
   "Generates Native library using Cargo and adds it as managed resource to classpath."
@@ -114,6 +103,21 @@ lazy val core = project
   .settings(
     Compile / packageBin / artifact := {
       val prev: Artifact = (Compile / packageBin / artifact).value
+//      TODO: Remove later if not required
+//      val targetClassifier = {
+//        val tgt = targetTriple.toLowerCase(java.util.Locale.ROOT)
+//        val arch = tgt.split("-").head
+//
+//        val host =
+//          if (tgt.contains("linux")) "linux"
+//          else if (tgt.contains("windows")) if (tgt.contains("msvc")) "win-msvc" else "win-gnu"
+//          else if (tgt.contains("apple") || tgt.contains("darwin")) "darwin"
+//
+//        s"$host-$arch"
+//      }
+
+      val targetClassifier = targetTriple
+
       sLog.value.info(
         s"Building jar with classifier `$targetClassifier`."
       )
