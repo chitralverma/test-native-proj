@@ -93,13 +93,13 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           sbt generateNativeLibrary
-          ls -R ${NATIVE_LIB_LOCATION}
+          ls -R /tmp/native-libs/
 
       - name: Temporarily save native library for ${{ matrix.arch }}
         uses: actions/upload-artifact@v3
         with:
           name: native_libs
-          path: ${NATIVE_LIB_LOCATION}
+          path: /tmp/native-libs/
           retention-days: 1
           if-no-files-found: error
 
@@ -126,11 +126,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: native_libs
-          path: ${NATIVE_LIB_LOCATION}
+          path: /tmp/native-libs/
 
       - name: List the built artifacts
         run: ls -R
-        working-directory: ${NATIVE_LIB_LOCATION}
+        working-directory: /tmp/native-libs/
 
       - name: Publish Artifacts
         run: sbt +publishLocal
