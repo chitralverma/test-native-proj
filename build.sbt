@@ -22,8 +22,12 @@ def priorTo213(scalaVersion: String): Boolean =
     case _ => false
   }
 
-val generateNativeLibrary = taskKey[Seq[(File, String)]](
+val generateNativeLibrary = taskKey[Unit](
   "Generates native library using Cargo which can be added as managed resource to classpath."
+)
+
+val managedNativeLibraries = taskKey[Seq[(File, String)]](
+  "Maps locally built, platform-dependant libraries to their locations on the classpath."
 )
 
 lazy val targetTriple = sys.env.getOrElse(
@@ -96,7 +100,7 @@ lazy val scalaSettings = Seq(
 
 lazy val nativeResourceSettings = Seq(
   generateNativeLibrary := Def
-    .taskDyn[Seq[(File, String)]] {
+    .taskDyn[Unit] {
       Def.task {
         val logger = sLog.value
 
@@ -118,19 +122,43 @@ lazy val nativeResourceSettings = Seq(
                               |""".stripMargin
 
         logger.info(
-          s"Building library with Cargo using command:\n${buildCommand.replaceAll("\n", " ")}"
+          s"Building native library with Cargo using command:" +
+            s"\n${buildCommand.replaceAll("\n", " ")}"
         )
+
         buildCommand !! processLogger
+        logger.info(s"Successfully built native library at location '$nativeOutputDir'")
+
+        sys.env.get("NATIVE_LIB_LOCATION") match {
+          case Some(path) =>
+            logger.info(
+              s"Copied built native library from " +
+                s"location '$nativeOutputDir' to '$path'."
+            )
+            IO.copyDirectory(nativeOutputDir.toFile, new File(path))
+
+          case None =>
+        }
+      }
+    }
+    .value,
+  managedNativeLibraries := Def
+    .taskDyn[Seq[(File, String)]] {
+      Def.task {
+        val externalNativeLibs = sys.env.get("NATIVE_LIB_LOCATION") match {
+          case Some(path) => new File(path).listFiles()
+          case None => Array.empty[java.io.File]
+        }
 
         // Collect list of built resources to later include in classpath
-        resourceManaged.value.toPath
+        (resourceManaged.value.toPath
           .resolve(s"native/$targetTriple/")
           .toFile
-          .listFiles()
+          .listFiles() ++ externalNativeLibs)
           .map(library => s"/native/${library.name}" -> library)
           .toMap
           .map { case (resourcePath, file) =>
-            logger.info(
+            sLog.value.info(
               s"Copying resource from location '$file' " +
                 s"(size: ${file.length() / (1024 * 1024)} MBs) " +
                 s"to '$resourcePath' in classpath."
@@ -139,11 +167,13 @@ lazy val nativeResourceSettings = Seq(
           }
           .toSeq
       }
+
     }
+    .dependsOn(generateNativeLibrary)
     .value,
   resourceGenerators += Def.task {
     // Add all generated resources to manage resources' classpath
-    val libraries: Seq[(File, String)] = generateNativeLibrary.value
+    val libraries: Seq[(File, String)] = managedNativeLibraries.value
     val resources: Seq[File] = for ((file, path) <- libraries) yield {
 
       // native library as a managed resource file
@@ -188,7 +218,6 @@ lazy val publishSettings = Seq(
   publish / skip := false,
   publishArtifact := true,
   publishMavenStyle := true,
-  publishArtifact in (Compile, packageDoc) := false,
   externalResolvers += "GitHub Package Registry" at "https://maven.pkg.github.com/chitralverma/test-native-proj",
   publishTo := Some(
     "GitHub Package Registry" at "https://maven.pkg.github.com/chitralverma/test-native-proj"

@@ -41,6 +41,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       TARGET_TRIPLE: ${{ matrix.arch }}
+      NATIVE_LIB_LOCATION: ~/native-libs/
     #    defaults:
     #      run:
     #        working-directory: ./native
@@ -49,16 +50,8 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            arch: aarch64-unknown-linux-gnu
-            packages: "sudo apt update && sudo apt-get install gcc-aarch64-linux-gnu"
-
-          - os: ubuntu-latest
             arch: x86_64-unknown-linux-gnu
             packages: ""
-
-          - os: ubuntu-latest
-            arch: x86_64-pc-windows-gnu
-            packages: "sudo apt update && sudo apt install mingw-w64"
 
           - os: windows-latest
             arch: x86_64-pc-windows-msvc
@@ -68,9 +61,6 @@ jobs:
             arch: x86_64-apple-darwin
             packages: ""
 
-          - os: macos-latest
-            arch: aarch64-apple-darwin
-            packages: ""
     steps:
       - uses: actions/checkout@v3
 
@@ -102,31 +92,30 @@ jobs:
       - name: Cross publish artifacts containing native library
         run: |
           rustup target add ${{ matrix.arch }}
-          sbt +aetherDeploy
-  #          ls -R ~/native-libs/${{ matrix.arch }}
-  #
-  #      - name: Temporarily save native library for ${{ matrix.arch }}
-  #        uses: actions/upload-artifact@v3
-  #        with:
-  #          name: native_libs
-  #          path: |
-  #            ~/native-libs/${{ matrix.arch }}/${{ matrix.arch }}/release
-  #          retention-days: 1
-  #          if-no-files-found: error
-  #
-  #  publish:
-  #    timeout-minutes: 15
-  #    runs-on: ubuntu-latest
-  #    needs: [ build-natives, get-version ]
-  #    steps:
-  #      - name: Download artifacts
-  #        uses: actions/download-artifact@v3
-  #        with:
-  #          name: native_libs
-  #
-  #      - name: List the built artifacts
-  #        run: ls -R
-  #        working-directory: ~/native-libs
+          sbt generateNativeLibrary
+          ls -R ~/native-libs/
+
+      - name: Temporarily save native library for ${{ matrix.arch }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: native_libs
+          path: ~/native-libs/
+          retention-days: 1
+          if-no-files-found: error
+
+    publish:
+      timeout-minutes: 15
+      runs-on: ubuntu-latest
+      needs: [ build-natives, get-version ]
+      steps:
+        - name: Download artifacts
+          uses: actions/download-artifact@v3
+          with:
+            name: native_libs
+
+        - name: List the built artifacts
+          run: ls -R
+          working-directory: ~/native-libs
 
   ############################
   #      - name: Build release musl library
