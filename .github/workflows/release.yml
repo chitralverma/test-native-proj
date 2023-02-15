@@ -93,7 +93,7 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           sbt generateNativeLibrary
-          ls -R ~/native-libs/
+          ls -R /tmp/native-libs/
 
       - name: Temporarily save native library for ${{ matrix.arch }}
         uses: actions/upload-artifact@v3
