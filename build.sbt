@@ -51,7 +51,7 @@ lazy val core = project
   .in(file("core"))
   .settings(generalProjectSettings)
   .settings(scalaSettings)
-  .settings(artifactNameSettings)
+//  .settings(artifactNameSettings)
   .settings(publishSettings)
   .settings(
     inConfig(Compile)(nativeResourceSettings),
@@ -104,40 +104,48 @@ lazy val nativeResourceSettings = Seq(
       Def.task {
         val logger = sLog.value
 
-        val processLogger = ProcessLogger(
-          (o: String) => logger.info(o),
-          (e: String) => logger.info(e)
-        )
-
-        val nativeOutputDir = resourceManaged.value.toPath.resolve(s"native/$targetTriple/")
-        val cargoTomlPath = s"${baseDirectory.value}/../native/Cargo.toml"
-
-        // Build native project using cargo
-        val buildCommand = s"""cargo build
-                              |-Z unstable-options
-                              |--release
-                              |--manifest-path $cargoTomlPath
-                              |--target $targetTriple
-                              |--out-dir $nativeOutputDir
-                              |""".stripMargin
-
-        logger.info(
-          s"Building native library with Cargo using command:" +
-            s"\n${buildCommand.replaceAll("\n", " ")}"
-        )
-
-        buildCommand !! processLogger
-        logger.info(s"Successfully built native library at location '$nativeOutputDir'")
-
-        sys.env.get("NATIVE_LIB_LOCATION") match {
-          case Some(path) =>
-            logger.info(
-              s"Copied built native library from " +
-                s"location '$nativeOutputDir' to '$path'."
-            )
-            IO.copyDirectory(nativeOutputDir.toFile, new File(path))
-
+        sys.env.get("SKIP_NATIVE_GENERATION") match {
           case None =>
+            val processLogger = ProcessLogger(
+              (o: String) => logger.info(o),
+              (e: String) => logger.info(e)
+            )
+
+            val nativeOutputDir = resourceManaged.value.toPath.resolve(s"native/$targetTriple/")
+            val cargoTomlPath = s"${baseDirectory.value}/../native/Cargo.toml"
+
+            // Build native project using cargo
+            val buildCommand = s"""cargo build
+                                  |-Z unstable-options
+                                  |--release
+                                  |--manifest-path $cargoTomlPath
+                                  |--target $targetTriple
+                                  |--out-dir $nativeOutputDir
+                                  |""".stripMargin
+
+            logger.info(
+              s"Building native library with Cargo using command:" +
+                s"\n${buildCommand.replaceAll("\n", " ")}"
+            )
+
+            buildCommand !! processLogger
+            logger.info(s"Successfully built native library at location '$nativeOutputDir'")
+
+            sys.env.get("NATIVE_LIB_LOCATION") match {
+              case Some(path) =>
+                logger.info(
+                  s"Copied built native library from " +
+                    s"location '$nativeOutputDir' to '$path'."
+                )
+                IO.copyDirectory(nativeOutputDir.toFile, new File(path))
+
+              case None =>
+            }
+
+          case Some(_) =>
+            logger.info(
+              "Environment variable SKIP_NATIVE_GENERATION is set, skipping cargo build."
+            )
         }
       }
     }
@@ -145,16 +153,22 @@ lazy val nativeResourceSettings = Seq(
   managedNativeLibraries := Def
     .taskDyn[Seq[(File, String)]] {
       Def.task {
+        val managedLibs = sys.env.get("SKIP_NATIVE_GENERATION") match {
+          case None =>
+            resourceManaged.value.toPath
+              .resolve(s"native/$targetTriple/")
+              .toFile
+              .listFiles()
+
+          case Some(_) => Array.empty[java.io.File]
+        }
         val externalNativeLibs = sys.env.get("NATIVE_LIB_LOCATION") match {
           case Some(path) => new File(path).listFiles()
           case None => Array.empty[java.io.File]
         }
 
         // Collect list of built resources to later include in classpath
-        (resourceManaged.value.toPath
-          .resolve(s"native/$targetTriple/")
-          .toFile
-          .listFiles() ++ externalNativeLibs)
+        (managedLibs ++ externalNativeLibs)
           .map(library => s"/native/${library.name}" -> library)
           .toMap
           .map { case (resourcePath, file) =>
@@ -188,31 +202,31 @@ lazy val nativeResourceSettings = Seq(
   }.taskValue
 )
 
-lazy val artifactNameSettings = Seq(
-  Compile / packageBin / artifact := {
-    val prev: Artifact = (Compile / packageBin / artifact).value
-    //      TODO: Remove later if not required
-    //      val targetClassifier = {
-    //        val tgt = targetTriple.toLowerCase(java.util.Locale.ROOT)
-    //        val arch = tgt.split("-").head
-    //
-    //        val host =
-    //          if (tgt.contains("linux")) "linux"
-    //          else if (tgt.contains("windows")) if (tgt.contains("msvc")) "win-msvc" else "win-gnu"
-    //          else if (tgt.contains("apple") || tgt.contains("darwin")) "darwin"
-    //
-    //        s"$host-$arch"
-    //      }
-
-    val targetClassifier = targetTriple
-
-    sLog.value.info(
-      s"Building jar with classifier `$targetClassifier`."
-    )
-
-    prev.withClassifier(Some(targetClassifier))
-  }
-)
+//lazy val artifactNameSettings = Seq(
+//  Compile / packageBin / artifact := {
+//    val prev: Artifact = (Compile / packageBin / artifact).value
+//    //      TODO: Remove later if not required
+//    //      val targetClassifier = {
+//    //        val tgt = targetTriple.toLowerCase(java.util.Locale.ROOT)
+//    //        val arch = tgt.split("-").head
+//    //
+//    //        val host =
+//    //          if (tgt.contains("linux")) "linux"
+//    //          else if (tgt.contains("windows")) if (tgt.contains("msvc")) "win-msvc" else "win-gnu"
+//    //          else if (tgt.contains("apple") || tgt.contains("darwin")) "darwin"
+//    //
+//    //        s"$host-$arch"
+//    //      }
+//
+//    val targetClassifier = targetTriple
+//
+//    sLog.value.info(
+//      s"Building jar with classifier `$targetClassifier`."
+//    )
+//
+//    prev.withClassifier(Some(targetClassifier))
+//  }
+//)
 
 lazy val publishSettings = Seq(
   publish / skip := false,

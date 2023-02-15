@@ -93,29 +93,47 @@ jobs:
         run: |
           rustup target add ${{ matrix.arch }}
           sbt generateNativeLibrary
-          ls -R /tmp/native-libs/
+          ls -R ${NATIVE_LIB_LOCATION}
 
       - name: Temporarily save native library for ${{ matrix.arch }}
         uses: actions/upload-artifact@v3
         with:
           name: native_libs
-          path: /tmp/native-libs/
+          path: ${NATIVE_LIB_LOCATION}
           retention-days: 1
           if-no-files-found: error
 
   publish:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+      TARGET_TRIPLE: ${{ matrix.arch }}
+      NATIVE_LIB_LOCATION: /tmp/native-libs/
+      SKIP_NATIVE_GENERATION: true
     needs: [ build-natives, get-version ]
     steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: "8"
+          distribution: 'temurin'
+          cache: 'sbt'
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
           name: native_libs
+          path: ${NATIVE_LIB_LOCATION}
 
       - name: List the built artifacts
         run: ls -R
-        working-directory: /tmp/native-libs/
+        working-directory: ${NATIVE_LIB_LOCATION}
+
+      - name: Publish Artifacts
+        run: sbt +publishLocal
 
   ############################
   #      - name: Build release musl library
