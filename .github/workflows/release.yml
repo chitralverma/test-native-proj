@@ -41,7 +41,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       TARGET_TRIPLE: ${{ matrix.arch }}
-      NATIVE_LIB_LOCATION: ~/native-libs/
+      NATIVE_LIB_LOCATION: /tmp/native-libs/
     #    defaults:
     #      run:
     #        working-directory: ./native
@@ -99,7 +99,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: native_libs
-          path: ~/native-libs/
+          path: /tmp/native-libs/
           retention-days: 1
           if-no-files-found: error
 
@@ -115,7 +115,7 @@ jobs:
 
       - name: List the built artifacts
         run: ls -R
-        working-directory: ~/native-libs
+        working-directory: /tmp/native-libs/
 
   ############################
   #      - name: Build release musl library
