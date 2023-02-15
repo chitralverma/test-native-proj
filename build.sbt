@@ -153,6 +153,8 @@ lazy val nativeResourceSettings = Seq(
   managedNativeLibraries := Def
     .taskDyn[Seq[(File, String)]] {
       Def.task {
+        val arch = targetTriple.toLowerCase(java.util.Locale.ROOT).split("-").head
+
         val managedLibs = sys.env.get("SKIP_NATIVE_GENERATION") match {
           case None =>
             resourceManaged.value.toPath
@@ -169,7 +171,7 @@ lazy val nativeResourceSettings = Seq(
 
         // Collect list of built resources to later include in classpath
         (managedLibs ++ externalNativeLibs)
-          .map(library => s"/native/${library.name}" -> library)
+          .map(library => s"/native/$arch/${library.name}" -> library)
           .toMap
           .map { case (resourcePath, file) =>
             sLog.value.info(

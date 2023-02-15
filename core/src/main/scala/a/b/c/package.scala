@@ -22,13 +22,17 @@ package object c {
       return
 
     if (libraryLoaded.compareAndSet(LibraryStates.NOT_LOADED, LibraryStates.LOADING)) {
-      Try(NativeLoader.load(NATIVE_LIB_NAME)) match {
+      val library = Option(System.getProperty("NATIVE_LIB"))
+        .orElse(Option(System.getenv("NATIVE_LIB")))
+        .getOrElse(NATIVE_LIB_NAME)
+
+      Try(NativeLoader.load(library)) match {
         case Success(_) =>
           libraryLoaded.set(LibraryStates.LOADED)
 
         case Failure(e) =>
           libraryLoaded.set(LibraryStates.NOT_LOADED)
-          throw new RuntimeException(s"Unable to load the `$NATIVE_LIB_NAME` native library.", e)
+          throw new RuntimeException(s"Unable to load the `$library` native library.", e)
       }
 
       return
