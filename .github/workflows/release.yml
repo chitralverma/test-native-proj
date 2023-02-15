@@ -133,7 +133,7 @@ jobs:
         working-directory: /tmp/native-libs/
 
       - name: Publish Artifacts
-        run: sbt +publishLocal
+        run: sbt +aetherDeploy
 
   ############################
   #      - name: Build release musl library
