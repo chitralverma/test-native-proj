@@ -52,8 +52,7 @@ object NativeLoader {
             catch {
               case ex: Throwable =>
                 throw new IllegalStateException(
-                  s"Unable to load the provided native library '$nativeLibrary'.",
-                  ex
+                  s"Unable to load the provided native library '$nativeLibrary'."
                 )
             }
         }

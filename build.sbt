@@ -1,3 +1,6 @@
+import java.nio.file._
+
+import scala.collection.JavaConverters._
 import scala.sys.process._
 
 ThisBuild / publish / skip := true
@@ -41,6 +44,8 @@ lazy val targetTriple = sys.env.getOrElse(
       .getOrElse(throw new IllegalStateException("No target triple found."))
   }
 )
+
+lazy val arch = targetTriple.toLowerCase(java.util.Locale.ROOT).split("-").head
 
 /*
  ***********************
@@ -133,11 +138,12 @@ lazy val nativeResourceSettings = Seq(
 
             sys.env.get("NATIVE_LIB_LOCATION") match {
               case Some(path) =>
+                val dest = Paths.get(path, arch).toAbsolutePath
                 logger.info(
                   s"Copied built native library from " +
-                    s"location '$nativeOutputDir' to '$path'."
+                    s"location '$nativeOutputDir' to '$dest'."
                 )
-                IO.copyDirectory(nativeOutputDir.toFile, new File(path))
+                IO.copyDirectory(nativeOutputDir.toFile, dest.toFile)
 
               case None =>
             }
@@ -153,8 +159,6 @@ lazy val nativeResourceSettings = Seq(
   managedNativeLibraries := Def
     .taskDyn[Seq[(File, String)]] {
       Def.task {
-        val arch = targetTriple.toLowerCase(java.util.Locale.ROOT).split("-").head
-
         val managedLibs = sys.env.get("SKIP_NATIVE_GENERATION") match {
           case None =>
             resourceManaged.value.toPath
@@ -164,14 +168,25 @@ lazy val nativeResourceSettings = Seq(
 
           case Some(_) => Array.empty[java.io.File]
         }
+
         val externalNativeLibs = sys.env.get("NATIVE_LIB_LOCATION") match {
-          case Some(path) => new File(path).listFiles()
+          case Some(path) =>
+            Files
+              .find(
+                Paths.get(path),
+                Int.MaxValue,
+                (filePath, _) => filePath.toFile.isFile
+              )
+              .iterator()
+              .asScala
+              .map(_.toFile)
+              .toArray
           case None => Array.empty[java.io.File]
         }
 
         // Collect list of built resources to later include in classpath
         (managedLibs ++ externalNativeLibs)
-          .map(library => s"/native/$arch/${library.name}" -> library)
+          .map(library => s"/${library.name}" -> library)
           .toMap
           .map { case (resourcePath, file) =>
             sLog.value.info(
@@ -193,11 +208,12 @@ lazy val nativeResourceSettings = Seq(
     val resources: Seq[File] = for ((file, path) <- libraries) yield {
 
       // native library as a managed resource file
-      val resource = resourceManaged.value / path
+      val resource = resourceManaged.value / "native" / arch / path
 
       // copy native library to a managed resource, so that it is always available
       // on the classpath, even when not packaged as a jar
-      IO.copyFile(file, resource)
+      IO.copyDirectory(file, resource)
+
       resource
     }
     resources
