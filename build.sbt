@@ -192,7 +192,7 @@ lazy val nativeResourceSettings = Seq(
             sLog.value.info(
               s"Copying resource from location '$file' " +
                 s"(size: ${file.length() / (1024 * 1024)} MBs) " +
-                s"to '$resourcePath' in classpath."
+                s"to classpath."
             )
             (file, resourcePath)
           }
