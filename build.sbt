@@ -29,7 +29,7 @@ val generateNativeLibrary = taskKey[Unit](
   "Generates native library using Cargo which can be added as managed resource to classpath."
 )
 
-val managedNativeLibraries = taskKey[Seq[(File, String)]](
+val managedNativeLibraries = taskKey[Seq[Path]](
   "Maps locally built, platform-dependant libraries to their locations on the classpath."
 )
 
@@ -142,9 +142,10 @@ lazy val nativeResourceSettings = Seq(
               case Some(path) =>
                 val dest = Paths.get(path, arch).toAbsolutePath
                 logger.info(
-                  s"Copied built native library from " +
-                    s"location '$nativeOutputDir' to '$dest'."
+                  "Environment variable NATIVE_LIB_LOCATION is set, " +
+                    s"copying built native library from location '$nativeOutputDir' to '$dest'."
                 )
+
                 IO.copyDirectory(nativeOutputDir.toFile, dest.toFile)
 
               case None =>
@@ -159,7 +160,7 @@ lazy val nativeResourceSettings = Seq(
     }
     .value,
   managedNativeLibraries := Def
-    .taskDyn[Seq[(File, String)]] {
+    .taskDyn[Seq[Path]] {
       Def.task {
         val managedLibs = sys.env.get("SKIP_NATIVE_GENERATION") match {
           case None =>
@@ -171,23 +172,14 @@ lazy val nativeResourceSettings = Seq(
               )
               .iterator()
               .asScala
-              .map(_.toFile)
-              .toArray
+              .toSeq
 
-          case Some(_) => Array.empty[java.io.File]
+          case Some(_) => Seq.empty[Path]
         }
 
         val externalNativeLibs = sys.env.get("NATIVE_LIB_LOCATION") match {
           case Some(path) =>
-            val processLogger = ProcessLogger(
-              (o: String) => println(o),
-              (e: String) => println(e)
-            )
-            println(s"Running ls -R $path")
-            val x = s"ls -R $path" !! processLogger
-            println(s"ls -R $path")
-
-            val files = Files
+            Files
               .find(
                 Paths.get(path),
                 Int.MaxValue,
@@ -195,82 +187,47 @@ lazy val nativeResourceSettings = Seq(
               )
               .iterator()
               .asScala
-              .map(_.toFile)
-              .toArray
-            files.foreach(f => println("file: " + f))
+              .toSeq
 
-            files
-
-          case None => Array.empty[java.io.File]
+          case None => Seq.empty[Path]
         }
 
-        // Collect list of built resources to later include in classpath
-        (managedLibs ++ externalNativeLibs)
-          .map(library => s"/${library.name}" -> library)
-          .toMap
-          .map { case (resourcePath, file) =>
-            sLog.value.info(
-              s"Copying resource from location '$file' " +
-                s"(size: ${file.length() / (1024 * 1024)} MBs) " +
-                s"to classpath."
-            )
-            (file, resourcePath)
-          }
-          .toSeq
+        // Collect paths of built resources to later include in classpath
+        (managedLibs ++ externalNativeLibs).distinct.map(_.toAbsolutePath)
       }
-
     }
     .dependsOn(generateNativeLibrary)
     .value,
   resourceGenerators += Def.task {
     // Add all generated resources to manage resources' classpath
-    val libraries: Seq[(File, String)] = managedNativeLibraries.value
-    val resources: Seq[File] = for ((file, fileNameStr) <- libraries) yield {
+    managedNativeLibraries.value
+      .map { path =>
+        val pathStr = path.toString
 
-      val arch =
-        if (file.absolutePath.contains("aarch64")) "aarch64"
-        else if (file.absolutePath.contains("x86_64")) "x86_64"
-        else file.toPath.getParent.getFileName.toString
+        // TODO: Remove later if not required
+        val arch =
+          if (pathStr.contains("aarch64")) "aarch64"
+          else if (pathStr.contains("x86_64")) "x86_64"
+          else path.getParent.getFileName.toString
 
-      println(("arch ", arch, file, fileNameStr))
-      // native library as a managed resource file
-      val resource = resourceManaged.value / "native" / arch / fileNameStr
+        val libraryFile = path.toFile
 
-      // copy native library to a managed resource, so that it is always available
-      // on the classpath, even when not packaged as a jar
-      IO.copyDirectory(file, resource)
+        // native library as a managed resource file
+        val resource = resourceManaged.value / "native" / arch / libraryFile.getName
 
-      resource
-    }
-    resources
+        // copy native library to a managed resource, so that it is always available
+        // on the classpath, even when not packaged as a jar
+        IO.copyDirectory(libraryFile, resource)
+
+        sLog.value.info(
+          s"Added resource from location '$pathStr' " +
+            s"(size: ${libraryFile.length() / (1024 * 1024)} MBs) to classpath."
+        )
+
+        resource
+      }
   }.taskValue
 )
-
-//lazy val artifactNameSettings = Seq(
-//  Compile / packageBin / artifact := {
-//    val prev: Artifact = (Compile / packageBin / artifact).value
-//    //      TODO: Remove later if not required
-//    //      val targetClassifier = {
-//    //        val tgt = targetTriple.toLowerCase(java.util.Locale.ROOT)
-//    //        val arch = tgt.split("-").head
-//    //
-//    //        val host =
-//    //          if (tgt.contains("linux")) "linux"
-//    //          else if (tgt.contains("windows")) if (tgt.contains("msvc")) "win-msvc" else "win-gnu"
-//    //          else if (tgt.contains("apple") || tgt.contains("darwin")) "darwin"
-//    //
-//    //        s"$host-$arch"
-//    //      }
-//
-//    val targetClassifier = targetTriple
-//
-//    sLog.value.info(
-//      s"Building jar with classifier `$targetClassifier`."
-//    )
-//
-//    prev.withClassifier(Some(targetClassifier))
-//  }
-//)
 
 lazy val publishSettings = Seq(
   publish / skip := false,
