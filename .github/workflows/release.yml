@@ -39,7 +39,6 @@ jobs:
     name: ${{ matrix.arch }} build
     runs-on: ${{ matrix.os }}
     env:
-      GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       TARGET_TRIPLE: ${{ matrix.arch }}
       NATIVE_LIB_LOCATION: /tmp/native-libs/
     strategy:
@@ -111,6 +110,39 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
+  test-build:
+    name: ${{ matrix.arch }} build
+    runs-on: ${{ matrix.os }}
+    needs: [ build-natives, get-version ]
+    env:
+      NATIVE_LIB_LOCATION: /tmp/native-libs/
+      SKIP_NATIVE_GENERATION: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+
+          - os: windows-latest
+
+          - os: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: "8"
+          distribution: 'temurin'
+          cache: 'sbt'
+
+      - name: Test for {{ matrix.os }}
+        run: |
+          sbt +assembly
+          java -cp ./core/target/scala-2.13/core-assembly-0.1.0-SNAPSHOT.jar a.b.c.Main
+          java -cp ./core/target/scala-2.12/core-assembly-0.1.0-SNAPSHOT.jar a.b.c.Main
+
   publish:
     timeout-minutes: 15
     runs-on: ubuntu-latest
@@ -118,7 +150,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
       NATIVE_LIB_LOCATION: /tmp/native-libs/
       SKIP_NATIVE_GENERATION: true
-    needs: [ build-natives, get-version ]
+    needs: [ test-build ]
     steps:
       - uses: actions/checkout@v3
 
