@@ -1,6 +1,6 @@
 package a.b.c
 
-import java.nio.file.{Files, Path}
+import java.nio.file._
 
 class NativeLoader(nativeLibrary: String) {
   NativeLoader.load(nativeLibrary)
@@ -10,10 +10,7 @@ object NativeLoader {
   def load(nativeLibrary: String): Unit = {
     def loadPackaged(arch: String): Unit = {
       val lib: String = System.mapLibraryName(nativeLibrary)
-
-      val tmp: Path = Files.createTempDirectory("jni-")
-
-      val resourcePath: String = s"/native/$arch/$lib"
+      val resourcePath: String = Paths.get("/native", arch, lib).toString
 
       val resourceStream = Option(
         this.getClass.getResourceAsStream(resourcePath)
@@ -25,6 +22,7 @@ object NativeLoader {
           )
       }
 
+      val tmp: Path = Files.createTempDirectory("jni-")
       val extractedPath = tmp.resolve(lib)
 
       try
@@ -52,7 +50,8 @@ object NativeLoader {
             catch {
               case ex: Throwable =>
                 throw new IllegalStateException(
-                  s"Unable to load the provided native library '$nativeLibrary'."
+                  s"Unable to load the provided native library '$nativeLibrary'.",
+                  ex
                 )
             }
         }
