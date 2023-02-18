@@ -15,7 +15,7 @@ object NativeLoader {
       println(("resourcePath", resourcePath))
 
       import io.github.classgraph.ClassGraph
-      import scala.jdk.CollectionConverters._
+      import scala.collection.JavaConverters._
       new ClassGraph().enableAllInfo.scan.getAllResources.asScala
         .map(_.getPath)
         .filter(_.contains("native"))
