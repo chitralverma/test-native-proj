@@ -137,7 +137,13 @@ jobs:
         working-directory: /tmp/native-libs/
 
       - name: Publish Artifacts
-        run: sbt +aetherDeploy
+        run: |
+          sbt +publishLocal
+          ls -R ~/.ivy2
+          jar -tf ~/.ivy2/local/a.b.c/core_2.12/0.1.0-SNAPSHOT/jars/core_2.12.jar
+          jar -tf ~/.ivy2/local/a.b.c/core_2.13/0.1.0-SNAPSHOT/jars/core_2.13.jar
+  
+  
 
   ############################
   #      - name: Build release musl library
