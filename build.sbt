@@ -68,7 +68,9 @@ lazy val generalProjectSettings = Seq(
       url = url("https://github.com/chitralverma")
     )
   ),
-  libraryDependencies += "io.github.classgraph" % "classgraph" % "4.8.154"
+  libraryDependencies ++= Seq(
+    "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1",
+    "io.github.classgraph" % "classgraph" % "4.8.154")
 )
 
 lazy val scalaSettings = Seq(
