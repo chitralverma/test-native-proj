@@ -69,8 +69,8 @@ lazy val generalProjectSettings = Seq(
     )
   ),
   libraryDependencies ++= Seq(
-    "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1",
-    "io.github.classgraph" % "classgraph" % "4.8.154")
+    "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1"
+  )
 )
 
 lazy val scalaSettings = Seq(

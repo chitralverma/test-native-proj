@@ -10,18 +10,7 @@ object NativeLoader {
   def load(nativeLibrary: String): Unit = {
     def loadPackaged(arch: String): Unit = {
       val lib: String = System.mapLibraryName(nativeLibrary)
-//      val resourcePath: String = Paths.get("/native", arch, lib).toString
       val resourcePath: String = s"/native/$arch/$lib"
-
-      println(("resourcePath", resourcePath))
-
-      import io.github.classgraph.ClassGraph
-
-      import scala.jdk.CollectionConverters._
-      new ClassGraph().enableAllInfo.scan.getAllResources.asScala
-        .map(_.getPath)
-        .filter(_.contains("native"))
-        .foreach(println)
 
       val resourceStream = Option(
         this.getClass.getResourceAsStream(resourcePath)
