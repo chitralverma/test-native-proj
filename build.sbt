@@ -179,9 +179,13 @@ lazy val nativeResourceSettings = Seq(
 
         val externalNativeLibs = sys.env.get("NATIVE_LIB_LOCATION") match {
           case Some(path) =>
+            val processLogger = ProcessLogger(
+              (o: String) => println(o),
+              (e: String) => println(e)
+            )
             println(s"Running ls -R $path")
-            val x = s"ls -R $path" !!
-              println(s"ls -R $path")
+            val x = s"ls -R $path" !! processLogger
+            println(s"ls -R $path")
 
             val files = Files
               .find(
