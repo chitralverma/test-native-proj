@@ -33,20 +33,6 @@ val managedNativeLibraries = taskKey[Seq[(File, String)]](
   "Maps locally built, platform-dependant libraries to their locations on the classpath."
 )
 
-lazy val targetTriple = sys.env.getOrElse(
-  "TARGET_TRIPLE", {
-    println("Environment variable TARGET_TRIPLE was not set, getting value from `rustc`.")
-
-    s"rustc -vV".!!.split("\n")
-      .map(_.trim)
-      .find(_.startsWith("host"))
-      .map(_.split(" ")(1).trim)
-      .getOrElse(throw new IllegalStateException("No target triple found."))
-  }
-)
-
-lazy val arch = targetTriple.toLowerCase(java.util.Locale.ROOT).split("-").head
-
 /*
  ***********************
  * Core Module *
@@ -116,6 +102,20 @@ lazy val nativeResourceSettings = Seq(
               (e: String) => logger.info(e)
             )
 
+            val targetTriple = sys.env.getOrElse(
+              "TARGET_TRIPLE", {
+                logger.warn("Environment variable TARGET_TRIPLE was not set, getting value from `rustc`.")
+
+                s"rustc -vV".!!.split("\n")
+                  .map(_.trim)
+                  .find(_.startsWith("host"))
+                  .map(_.split(" ")(1).trim)
+                  .getOrElse(throw new IllegalStateException("No target triple found."))
+              }
+            )
+
+            val arch = targetTriple.toLowerCase(java.util.Locale.ROOT).split("-").head
+
             val nativeOutputDir = resourceManaged.value.toPath.resolve(s"native/$arch/")
             val cargoTomlPath = s"${baseDirectory.value}/../native/Cargo.toml"
 
@@ -161,10 +161,16 @@ lazy val nativeResourceSettings = Seq(
       Def.task {
         val managedLibs = sys.env.get("SKIP_NATIVE_GENERATION") match {
           case None =>
-            resourceManaged.value.toPath
-              .resolve(s"native/$arch/")
-              .toFile
-              .listFiles()
+            Files
+              .find(
+                resourceManaged.value.toPath.resolve("native/"),
+                Int.MaxValue,
+                (filePath, _) => filePath.toFile.isFile
+              )
+              .iterator()
+              .asScala
+              .map(_.toFile)
+              .toArray
 
           case Some(_) => Array.empty[java.io.File]
         }
@@ -212,7 +218,7 @@ lazy val nativeResourceSettings = Seq(
         else if (file.absolutePath.contains("x86_64")) "x86_64"
         else file.toPath.getParent.getFileName.toString
 
-      println(("targetTriple+arch ", targetTriple, arch, file, path))
+      println(("arch ", arch, file, path))
       // native library as a managed resource file
       val resource = resourceManaged.value / "native" / arch / path
 

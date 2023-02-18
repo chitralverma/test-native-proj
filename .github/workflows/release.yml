@@ -112,7 +112,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-      TARGET_TRIPLE: ${{ matrix.arch }}
       NATIVE_LIB_LOCATION: /tmp/native-libs/
       SKIP_NATIVE_GENERATION: true
     needs: [ build-natives, get-version ]
