@@ -116,7 +116,7 @@ lazy val nativeResourceSettings = Seq(
               (e: String) => logger.info(e)
             )
 
-            val nativeOutputDir = resourceManaged.value.toPath.resolve(s"native/$targetTriple/")
+            val nativeOutputDir = resourceManaged.value.toPath.resolve(s"native/$arch/")
             val cargoTomlPath = s"${baseDirectory.value}/../native/Cargo.toml"
 
             // Build native project using cargo
@@ -162,7 +162,7 @@ lazy val nativeResourceSettings = Seq(
         val managedLibs = sys.env.get("SKIP_NATIVE_GENERATION") match {
           case None =>
             resourceManaged.value.toPath
-              .resolve(s"native/$targetTriple/")
+              .resolve(s"native/$arch/")
               .toFile
               .listFiles()
 
@@ -207,7 +207,12 @@ lazy val nativeResourceSettings = Seq(
     val libraries: Seq[(File, String)] = managedNativeLibraries.value
     val resources: Seq[File] = for ((file, path) <- libraries) yield {
 
-      println(("targetTriple+arch ", targetTriple, arch))
+      val arch =
+        if (file.absolutePath.contains("aarch64")) "aarch64"
+        else if (file.absolutePath.contains("x86_64")) "x86_64"
+        else file.toPath.getParent.getFileName.toString
+
+      println(("targetTriple+arch ", targetTriple, arch, file, path))
       // native library as a managed resource file
       val resource = resourceManaged.value / "native" / arch / path
 
