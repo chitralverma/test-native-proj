@@ -137,6 +137,12 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: native_libs
+          path: /tmp/native-libs/
+
       - name: Test for {{ matrix.os }}
         run: |
           sbt +assembly
