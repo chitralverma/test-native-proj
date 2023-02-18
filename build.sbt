@@ -104,7 +104,9 @@ lazy val nativeResourceSettings = Seq(
 
             val targetTriple = sys.env.getOrElse(
               "TARGET_TRIPLE", {
-                logger.warn("Environment variable TARGET_TRIPLE was not set, getting value from `rustc`.")
+                logger.warn(
+                  "Environment variable TARGET_TRIPLE was not set, getting value from `rustc`."
+                )
 
                 s"rustc -vV".!!.split("\n")
                   .map(_.trim)
@@ -177,7 +179,11 @@ lazy val nativeResourceSettings = Seq(
 
         val externalNativeLibs = sys.env.get("NATIVE_LIB_LOCATION") match {
           case Some(path) =>
-            Files
+            println(s"Running ls -R $path")
+            val x = s"ls -R $path" !!
+              println(s"ls -R $path")
+
+            val files = Files
               .find(
                 Paths.get(path),
                 Int.MaxValue,
@@ -187,6 +193,10 @@ lazy val nativeResourceSettings = Seq(
               .asScala
               .map(_.toFile)
               .toArray
+            files.foreach(f => println("file: " + f))
+
+            files
+
           case None => Array.empty[java.io.File]
         }
 
@@ -211,16 +221,16 @@ lazy val nativeResourceSettings = Seq(
   resourceGenerators += Def.task {
     // Add all generated resources to manage resources' classpath
     val libraries: Seq[(File, String)] = managedNativeLibraries.value
-    val resources: Seq[File] = for ((file, path) <- libraries) yield {
+    val resources: Seq[File] = for ((file, fileNameStr) <- libraries) yield {
 
       val arch =
         if (file.absolutePath.contains("aarch64")) "aarch64"
         else if (file.absolutePath.contains("x86_64")) "x86_64"
         else file.toPath.getParent.getFileName.toString
 
-      println(("arch ", arch, file, path))
+      println(("arch ", arch, file, fileNameStr))
       // native library as a managed resource file
-      val resource = resourceManaged.value / "native" / arch / path
+      val resource = resourceManaged.value / "native" / arch / fileNameStr
 
       // copy native library to a managed resource, so that it is always available
       // on the classpath, even when not packaged as a jar
