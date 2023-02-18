@@ -111,7 +111,7 @@ jobs:
           if-no-files-found: error
 
   test-build:
-    name: ${{ matrix.arch }} build
+    name: ${{ matrix.os }} test
     runs-on: ${{ matrix.os }}
     needs: [ build-natives, get-version ]
     env:
@@ -143,7 +143,7 @@ jobs:
           name: native_libs
           path: /tmp/native-libs/
 
-      - name: Test for {{ matrix.os }}
+      - name: Test for ${{ matrix.os }}
         run: |
           sbt +assembly
           java -cp ./core/target/scala-2.13/core-assembly-0.1.0-SNAPSHOT.jar a.b.c.Main

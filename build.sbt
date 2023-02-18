@@ -54,6 +54,7 @@ lazy val core = project
  * Core Module Settings *
  ***********************
  */
+
 lazy val generalProjectSettings = Seq(
   name := "core",
   organization := "a.b.c",
@@ -66,8 +67,10 @@ lazy val generalProjectSettings = Seq(
       email = "chitral.verma@gmail.com",
       url = url("https://github.com/chitralverma")
     )
-  )
+  ),
+  libraryDependencies += "io.github.classgraph" % "classgraph" % "4.8.154"
 )
+
 lazy val scalaSettings = Seq(
   scalaVersion := defaultScalaVersion,
   crossScalaVersions := supportedScalaVersions,
