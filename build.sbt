@@ -207,6 +207,7 @@ lazy val nativeResourceSettings = Seq(
     val libraries: Seq[(File, String)] = managedNativeLibraries.value
     val resources: Seq[File] = for ((file, path) <- libraries) yield {
 
+      println(("targetTriple+arch ", targetTriple, arch))
       // native library as a managed resource file
       val resource = resourceManaged.value / "native" / arch / path
 
