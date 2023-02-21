@@ -134,6 +134,10 @@ jobs:
           distribution: 'temurin'
           cache: 'sbt'
 
+      - uses: coursier/cache-action@v6
+        with:
+          extraKey: ${{ matrix.arch }}
+
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
@@ -163,6 +167,10 @@ jobs:
           java-version: "8"
           distribution: 'temurin'
           cache: 'sbt'
+
+      - uses: coursier/cache-action@v6
+        with:
+          extraKey: ${{ matrix.arch }}
 
       - name: Download artifacts
         uses: actions/download-artifact@v3
