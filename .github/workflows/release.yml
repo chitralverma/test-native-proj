@@ -87,7 +87,8 @@ jobs:
       - uses: coursier/cache-action@v6
 
       - uses: Swatinem/rust-cache@v2
-        workspaces: native
+        with:
+          workspaces: native
 
       - name: Cross publish artifacts containing native library
         run: |
