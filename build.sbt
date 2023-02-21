@@ -42,7 +42,6 @@ lazy val core = project
   .in(file("core"))
   .settings(generalProjectSettings)
   .settings(scalaSettings)
-//  .settings(artifactNameSettings)
   .settings(publishSettings)
   .settings(
     inConfig(Compile)(nativeResourceSettings),

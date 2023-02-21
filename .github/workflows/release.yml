@@ -84,17 +84,10 @@ jobs:
       - name: Install rust toolchain
         uses: dtolnay/rust-toolchain@nightly
 
-      - uses: actions/cache@v3
-        continue-on-error: false
-        with:
-          path: |
-            ~/.cargo/
-            **/target/
-            ~/.sbt
-            ~/.ivy2/cache
-            ~/.cache/coursier
-          key: ${{ runner.arch }}-${{ runner.os }}-cache-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: ${{ runner.arch }}-${{ runner.os }}-cargo-
+      - uses: coursier/cache-action@v6
+
+      - uses: Swatinem/rust-cache@v2
+        workspaces: native
 
       - name: Cross publish artifacts containing native library
         run: |
