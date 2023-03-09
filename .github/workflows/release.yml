@@ -42,6 +42,7 @@ jobs:
       TARGET_TRIPLE: ${{ matrix.arch }}
       NATIVE_LIB_LOCATION: /tmp/native-libs/
     strategy:
+      fail-fast: false
 #      fail-fast: true
       matrix:
         include:
